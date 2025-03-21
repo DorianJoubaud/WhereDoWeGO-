@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Mathematical Explanation</title>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    body {
+      font-family: 'Helvetica Neue', sans-serif;
+      padding: 2rem;
+      line-height: 1.6;
+      max-width: 800px;
+      margin: auto;
+    }
+    h1, h2 {
+      color: #333;
+    }
+    code {
+      background: #f4f4f4;
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <p>The objective is to compute the <em>minimum enclosing circle</em> on Earth (considered as a sphere), given any number of GPS coordinates. It determines the center, the radius in meters, and checks if all input points are contained. The solution is based on a 3D spherical adaptation of the Shamos-Hoey algorithm.</p>
+
+  <h1>Mathematics Behind the Minimum Enclosing Circle</h1>
+
+  <h2>1. Geographic Coordinates → 3D Sphere</h2>
+  <p>To project a GPS point \( (\phi, \lambda) \) (latitude, longitude in degrees) on the unit sphere:</p>
+  <p>
+    \[ x = \cos(\phi) \cdot \cos(\lambda), \quad y = \cos(\phi) \cdot \sin(\lambda), \quad z = \sin(\phi) \]
+  </p>
+
+  <h2>2. Circle Through 3 Points (on the Sphere)</h2>
+  <p>
+    For 3 unit vectors \( \vec{A}, \vec{B}, \vec{C} \), compute the normal to the plane defined by them:
+    \[ \vec{n} = \frac{(\vec{B} - \vec{A}) \times (\vec{C} - \vec{A})}{\|\cdot\|} \]
+    Then normalize \( \vec{n} \). The center of the spherical circle is:
+    \[ \vec{O} = \pm \vec{n} \quad (\text{sign chosen to face the input points}) \]
+  </p>
+
+  <h2>3. Geodesic Radius</h2>
+  <p>
+    The angle between the center \( \vec{O} \) and a boundary point (e.g., \( \vec{A} \)) gives the radius (in radians):
+    \[ r = \cos^{-1}(\vec{O} \cdot \vec{A}) \]
+  </p>
+  <p>
+    Then converted to meters using haversine distance:
+  </p>
+  <p>
+    \[ d = 2R \cdot \arcsin\left(\sqrt{\sin^2\left(\frac{\Delta \phi}{2}\right) + \cos(\phi_1) \cos(\phi_2) \sin^2\left(\frac{\Delta \lambda}{2}\right)}\right) \]
+  </p>
+  <p>with \( R = 6371 \) km (mean Earth radius).</p>
+
+  <h2>4. Convex Hull Optimization</h2>
+  <p>
+    Only points from the 2D-projected convex hull are tested (the fewest points tested the fastest). We use a tangent plane projection followed by a monotone chain algorithm:
+  </p>
+  <p>
+    \[ \text{cross2D}(O, A, B) = (A_x - O_x)(B_y - O_y) - (A_y - O_y)(B_x - O_x) \]
+  </p>
+
+  <h2>5. Shamos-Hoey Algorithm (1975)</h2>
+  <p>
+    In the original 2D algorithm:
+    <ul>
+      <li>Construct the convex hull \( S \) of the input points</li>
+      <li>Check all diametral pairs \( (A, B) \) to see if the circle with diameter \( AB \) contains all points</li>
+      <li>If not, test all triplets \( (A, B, C) \), and compute the circumcircle center and radius</li>
+      <li>The center must lie at the intersection of the three Voronoi cells</li>
+    </ul>
+  </p>
+  <p>
+    In our 3D adaptation:
+    <ul>
+      <li>We project the points onto the unit sphere</li>
+      <li>We compute the true spherical circumcircle for all triplets on the convex hull</li>
+      <li>We fallback to diameter-based circles for pairs</li>
+      <li>We use angle-based inclusion to verify if all points are within the candidate circle</li>
+    </ul>
+  </p>
+
+  <h2>6. Validity Check</h2>
+  <p>
+    For each candidate center \( \vec{O} \) and radius \( r \), we check:
+    \[ \forall \vec{P},\ \angle(\vec{O}, \vec{P}) \leq r + \varepsilon \]
+  </p>
+
+  <hr>
+  <p style="text-align: center; margin-top: 2rem;">
+    <a href="index.html" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">
+      ← Back to the Application
+    </a>
+  </p>
+  <h2>References</h2>
+  <ul>
+    <li>Shamos, M.I., & Hoey, D. (1975). Closest-point problems. <em>16th Annual Symposium on Foundations of Computer Science</em>.</li>
+    <li>Fischer, K., & Gärtner, B. (2000). The smallest enclosing ball of balls: Combinatorial structure and algorithms. <em>Proceedings of the 16th Annual Symposium on Computational Geometry</em>.</li>
+    <li>Vincenty, T. (1975). Direct and inverse solutions of geodesics on the ellipsoid with application of nested equations. <em>Survey Review</em>.</li>
+  </ul>
+
+</body>
+</html>

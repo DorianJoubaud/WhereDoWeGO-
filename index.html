@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carte & Recherche de Commerces</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBynAjukhaccuzT_YvQlvctd78terjliIg&libraries=places"></script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+</head>
+<body>
+    <div id="container">
+        <div id="sidebar">
+            <h2>Points</h2>
+            <div id="pointsList"></div>
+            <input type="text" id="addressInput" placeholder="Entrez une adresse">
+            <select id="businessType">
+                <option value="">Type de commerce (optionnel)</option>
+                <option value="restaurant">Restaurant</option>
+                <option value="cafe">Café</option>
+                <option value="bar">Bar</option>
+                <option value="hotel">Hôtel</option>
+                <option value="supermarket">Supermarché</option>
+                <option value="pharmacy">Pharmacie</option>
+                <option value="bank">Banque</option>
+            </select>
+            <button id="addPointButton">Ajouter un point</button>
+            <button id="addFromMapButton">Ajouter sur la carte</button>
+            <button id="searchBusinessButton">Chercher</button>
+            <button id="clearButton">Effacer</button>
+            <div id="businessInfo" class="info-card" style="display: none;"></div>
+            <button id="toggleHullButton">Afficher enveloppe convexe</button>
+            <a href="maths.html" target="_blank" id="mathBtn">📘 Voir les mathématiques</a>
+
+
+
+        </div>
+        <div id="map"></div>
+    </div>
+    <script src="js/utils3d.js"></script>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
