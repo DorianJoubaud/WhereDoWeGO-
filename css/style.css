@@ -85,4 +85,40 @@ body, html {
     background: #007bff;
     color: white;
   }
+
+
+@media (max-width: 1024px) and (min-width: 768px) {
+    #sidebar {
+      width: 200px;
+      padding: 10px;
+    }
+  
+    #map {
+      height: 100%;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    #container {
+      flex-direction: column;
+    }
+  
+    #sidebar {
+      width: 100%;
+      order: 2;
+      border-right: none;
+      border-top: 1px solid #ddd;
+      padding: 10px;
+    }
+  
+    #map {
+      order: 1;
+      height: 50vh;
+    }
+  
+    #mathBtn {
+      padding: 8px;
+      font-size: 14px;
+    }
+  }
   
