@@ -13,19 +13,23 @@ let centerMarker = null;
 let businessMarker = null;
 let addingFromMap = false;
 
-// Google Places Autocomplete
+// Google Places Autocomplete Element
 function initAutocomplete() {
   const autocompleteInput = document.getElementById('addressInput');
   
-  // Configure the autocomplete element
-  autocompleteInput.componentRestrictions = { country: 'FR' };
-  autocompleteInput.types = ['geocode'];
+  // Note: country is set as HTML attribute in index.html (country="fr")
+  // If needed to set dynamically, use setAttribute:
+  // autocompleteInput.setAttribute('country', 'fr');
+  // autocompleteInput.setAttribute('type', 'geocode');
 
-  // Listen to the place selection event
-  autocompleteInput.addEventListener('gmp-placeselect', async ({ place }) => {
+  // Listen to the gmp-placeselect event
+  autocompleteInput.addEventListener('gmp-placeselect', async (event) => {
+    const place = event.place;
+    
     try {
+      // Fetch the required fields
       await place.fetchFields({
-        fields: ['formattedAddress', 'location']
+        fields: ['displayName', 'formattedAddress', 'location']
       });
 
       if (!place.location) {
@@ -35,12 +39,14 @@ function initAutocomplete() {
 
       const lat = place.location.lat();
       const lng = place.location.lng();
-      const address = place.formattedAddress;
+      const address = place.formattedAddress || place.displayName;
 
       const marker = L.marker([lat, lng]).addTo(map);
       markers.push(marker);
       points.push({ lat, lng, address });
       updatePointsList();
+      
+      // Clear the input
       autocompleteInput.value = '';
     } catch (error) {
       console.error('Error fetching place details:', error);
@@ -219,4 +225,12 @@ function haversine(lat1, lon1, lat2, lon2) {
   return 2 * R * Math.asin(Math.sqrt(a)) * 1000; // return in meters
 }
 
-initAutocomplete();
+// Initialize autocomplete when Google Maps API is ready
+function initMap() {
+  initAutocomplete();
+}
+
+// If script is already loaded (for development)
+if (window.google && window.google.maps) {
+  initAutocomplete();
+}

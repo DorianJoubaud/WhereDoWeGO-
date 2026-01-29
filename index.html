@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Carte & Recherche de Commerces</title>
     <link rel="stylesheet" href="css/style.css">
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBynAjukhaccuzT_YvQlvctd78terjliIg&libraries=places"></script>
+    <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBynAjukhaccuzT_YvQlvctd78terjliIg&libraries=places&loading=async&callback=initMap"></script>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
 </head>
@@ -14,7 +14,7 @@
         <div id="sidebar">
             <h2>Points</h2>
             <div id="pointsList"></div>
-            <gmp-place-autocomplete id="addressInput" placeholder="Entrez une adresse"></gmp-place-autocomplete>
+            <gmp-place-autocomplete id="addressInput" placeholder="Entrez une adresse" country="fr"></gmp-place-autocomplete>
             <select id="businessType">
                 <option value="">Type de commerce (optionnel)</option>
                 <option value="restaurant">Restaurant</option>
