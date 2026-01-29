@@ -15,27 +15,32 @@ let addingFromMap = false;
 
 // Google Places Autocomplete
 function initAutocomplete() {
-  const input = document.getElementById('addressInput');
-  const autocomplete = new google.maps.places.Autocomplete(input, {
-    types: ['geocode'],
-    componentRestrictions: { country: 'FR' }
-  });
+  const autocompleteInput = document.getElementById('addressInput');
+  
+  // Configure the autocomplete element
+  autocompleteInput.componentRestrictions = { country: 'FR' };
+  autocompleteInput.types = ['geocode'];
 
-  autocomplete.addListener('place_changed', function () {
-    const place = autocomplete.getPlace();
-    if (!place.geometry) {
+  // Listen to the place selection event
+  autocompleteInput.addEventListener('gmp-placeselect', async ({ place }) => {
+    await place.fetchFields({
+      fields: ['displayName', 'formattedAddress', 'location']
+    });
+
+    if (!place.location) {
       alert("Adresse non reconnue.");
       return;
     }
-    const lat = place.geometry.location.lat();
-    const lng = place.geometry.location.lng();
-    const address = place.formatted_address;
+
+    const lat = place.location.lat();
+    const lng = place.location.lng();
+    const address = place.formattedAddress;
 
     const marker = L.marker([lat, lng]).addTo(map);
     markers.push(marker);
     points.push({ lat, lng, address });
     updatePointsList();
-    input.value = '';
+    autocompleteInput.value = '';
   });
 }
 
