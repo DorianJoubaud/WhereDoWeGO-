@@ -14,13 +14,18 @@ let businessMarker = null;
 let addingFromMap = false;
 
 // Google Places Autocomplete Element
+let autocompleteInitialized = false;
+
 function initAutocomplete() {
+  if (autocompleteInitialized) return;
+  autocompleteInitialized = true;
+  
   const autocompleteInput = document.getElementById('addressInput');
   
   // Note: country is set as HTML attribute in index.html (country="fr")
   // If needed to set dynamically, use setAttribute:
   // autocompleteInput.setAttribute('country', 'fr');
-  // autocompleteInput.setAttribute('type', 'geocode');
+  // autocompleteInput.setAttribute('types', 'geocode');
 
   // Listen to the gmp-placeselect event
   autocompleteInput.addEventListener('gmp-placeselect', async (event) => {
