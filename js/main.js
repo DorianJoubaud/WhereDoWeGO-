@@ -23,24 +23,29 @@ function initAutocomplete() {
 
   // Listen to the place selection event
   autocompleteInput.addEventListener('gmp-placeselect', async ({ place }) => {
-    await place.fetchFields({
-      fields: ['displayName', 'formattedAddress', 'location']
-    });
+    try {
+      await place.fetchFields({
+        fields: ['formattedAddress', 'location']
+      });
 
-    if (!place.location) {
-      alert("Adresse non reconnue.");
-      return;
+      if (!place.location) {
+        alert("Adresse non reconnue.");
+        return;
+      }
+
+      const lat = place.location.lat();
+      const lng = place.location.lng();
+      const address = place.formattedAddress;
+
+      const marker = L.marker([lat, lng]).addTo(map);
+      markers.push(marker);
+      points.push({ lat, lng, address });
+      updatePointsList();
+      autocompleteInput.value = '';
+    } catch (error) {
+      console.error('Error fetching place details:', error);
+      alert("Erreur lors de la récupération des détails de l'adresse.");
     }
-
-    const lat = place.location.lat();
-    const lng = place.location.lng();
-    const address = place.formattedAddress;
-
-    const marker = L.marker([lat, lng]).addTo(map);
-    markers.push(marker);
-    points.push({ lat, lng, address });
-    updatePointsList();
-    autocompleteInput.value = '';
   });
 }
 
