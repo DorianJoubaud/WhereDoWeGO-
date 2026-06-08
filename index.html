@@ -3,46 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Carte & Recherche de Commerces</title>
-    <link rel="stylesheet" href="css/style.css">
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <link
-  rel="stylesheet"
-  href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"
-/>
-<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    <title>Where do we go ?</title>
+    <meta name="description" content="Trouvez le point de rencontre central d'un groupe d'adresses et le commerce le plus proche.">
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div id="container">
-        <div id="sidebar">
-            <h2>Points</h2>
-            <div id="pointsList"></div>
-            <select id="businessType">
-                <option value="">Type de commerce (optionnel)</option>
-                <option value="restaurant">Restaurant</option>
-                <option value="cafe">Café</option>
-                <option value="bar">Bar</option>
-                <option value="hotel">Hôtel</option>
-                <option value="supermarket">Supermarché</option>
-                <option value="pharmacy">Pharmacie</option>
-                <option value="bank">Banque</option>
-            </select>
-            <button id="addFromMapButton">Ajouter sur la carte</button>
-            <button id="searchBusinessButton">Chercher</button>
-            <button id="clearButton">Effacer</button>
-            <div id="businessInfo" class="info-card" style="display: none;"></div>
-            <button id="toggleHullButton">Afficher enveloppe convexe</button>
-            <a href="maths.html" target="_blank" id="mathBtn">📘 Voir les mathématiques</a>
 
+<div id="map"></div>
 
+<!-- ============ Controls panel (top-left floating) ============ -->
+<aside class="panel panel--controls" id="controls">
+    <header class="panel__head">
+        <h1 class="panel__title">Where do we go ?</h1>
+        <p class="panel__hint">Ajoutez des adresses, on cherche le point de rencontre.</p>
+    </header>
 
+    <form class="search" id="searchForm" autocomplete="off">
+        <input
+            class="search__input"
+            type="text"
+            id="addressInput"
+            placeholder="Adresse…"
+            spellcheck="false"
+            autocomplete="off"
+            role="combobox"
+            aria-autocomplete="list"
+            aria-expanded="false"
+            aria-controls="suggestions">
+        <button class="search__btn" type="submit" aria-label="Ajouter">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+        <ul class="suggestions" id="suggestions" role="listbox" hidden></ul>
+    </form>
+
+    <label class="field">
+        <span class="field__label">Type de commerce (optionnel)</span>
+        <select id="businessType" class="field__select">
+            <option value="">Aucun</option>
+            <option value="restaurant">Restaurant</option>
+            <option value="cafe">Café</option>
+            <option value="bar">Bar</option>
+            <option value="hotel">Hôtel</option>
+            <option value="supermarket">Supermarché</option>
+            <option value="pharmacy">Pharmacie</option>
+            <option value="bank">Banque</option>
+        </select>
+    </label>
+
+    <section class="points">
+        <div class="points__head">
+            <span class="points__label">Points</span>
+            <span class="points__count" id="pointsCount">0</span>
         </div>
-        <div id="map"></div>
-    </div>
-    <script src="js/utils3d.js"></script>
+        <ul class="points__list" id="pointsList">
+            <li class="points__empty">Aucun point pour le moment.</li>
+        </ul>
+    </section>
 
-    <script src="js/main.js"></script>
+    <div class="actions">
+        <button class="btn btn--primary" id="searchBusinessButton">Trouver le point de rencontre</button>
+        <div class="actions__row">
+            <button class="btn btn--ghost" id="addFromMapButton" type="button">Sur la carte</button>
+            <button class="btn btn--ghost" id="toggleHullButton" type="button">Enveloppe</button>
+            <button class="btn btn--ghost btn--danger" id="clearButton" type="button">Effacer</button>
+        </div>
+    </div>
+
+    <footer class="panel__foot">
+        <a href="maths.html" target="_blank" rel="noopener">Les maths derrière →</a>
+    </footer>
+</aside>
+
+<!-- ============ Result card (bottom-right floating) ============ -->
+<aside class="panel panel--result" id="businessInfo" hidden>
+    <button class="panel__close" id="resultClose" aria-label="Fermer">×</button>
+    <p class="result__kicker" id="resultKicker">Résultat</p>
+    <h2 class="result__title" id="resultTitle"></h2>
+    <p class="result__meta" id="resultMeta"></p>
+    <a class="result__link" id="resultLink" target="_blank" rel="noopener">Ouvrir dans Google Maps</a>
+</aside>
+
+<!-- ============ Status / errors toast ============ -->
+<div id="toast" class="toast" hidden></div>
+
+<script src="js/utils3d.js"></script>
+<script src="js/main.js"></script>
 </body>
 </html>
