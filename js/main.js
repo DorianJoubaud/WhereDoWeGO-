@@ -1,5 +1,39 @@
 // === main.js — WhereDoWeGo, dark-glass redesign ===
-console.log('%c[WhereDoWeGo] main.js build v4 (timeout+urlencoded)', 'color:#11ABB0');
+console.log('%c[WhereDoWeGo] main.js build v6 (Google Places)', 'color:#11ABB0');
+
+// ============================================================
+// CONFIG — Google Places API (New) key is injected at deploy time.
+//
+// The placeholder below is substituted by the GitHub Actions workflow
+// (.github/workflows/pages.yml) using the GOOGLE_PLACES_API_KEY repo
+// secret. The plain repo never contains the key.
+//
+// Locally (file://) the placeholder stays intact and the app shows a
+// "key missing" toast — that's expected. Test on the deployed site.
+//
+// Setup checklist (one-time, see README/notes):
+//   1. Enable "Places API (New)" in Google Cloud.
+//   2. Create a key, restrict it to:
+//        - HTTP referrers: https://dorianjoubaud.com/* and https://dorianjoubaud.github.io/*
+//        - API: Places API (New) only
+//        - Daily quota cap (recommended: 1000/day).
+//   3. GitHub repo → Settings → Secrets → Actions → new secret
+//      named GOOGLE_PLACES_API_KEY.
+//   4. GitHub repo → Settings → Pages → Source: GitHub Actions.
+// ============================================================
+const GOOGLE_PLACES_API_KEY = '@@PLACEHOLDER@@';
+const HAS_API_KEY = !GOOGLE_PLACES_API_KEY.startsWith('@@');
+
+// Dropdown type -> Google Place types (https://developers.google.com/maps/documentation/places/web-service/place-types).
+const TYPE_TO_GOOGLE = {
+    restaurant:  ['restaurant'],
+    cafe:        ['cafe'],
+    bar:         ['bar'],
+    hotel:       ['lodging'],
+    supermarket: ['supermarket', 'grocery_store'],
+    pharmacy:    ['pharmacy'],
+    bank:        ['bank']
+};
 
 const map = L.map('map', { zoomControl: true }).setView([48.8566, 2.3522], 13);
 
@@ -192,6 +226,11 @@ function renderPoints() {
     }
     points.forEach((p, idx) => {
         const li = document.createElement('li');
+        const colour = colorForIndex(idx);
+
+        const swatch = document.createElement('span');
+        swatch.className = 'point__swatch';
+        swatch.style.background = colour;
 
         const label = document.createElement('span');
         label.className = 'point__label';
@@ -205,6 +244,7 @@ function renderPoints() {
         btn.textContent = '×';
         btn.addEventListener('click', () => removePoint(idx));
 
+        li.appendChild(swatch);
         li.appendChild(label);
         li.appendChild(btn);
         list.appendChild(li);
@@ -212,7 +252,15 @@ function renderPoints() {
 }
 
 function addPoint(p, opts = {}) {
-    const marker = L.marker([p.lat, p.lng]).addTo(map);
+    const idx = points.length;
+    const colour = colorForIndex(idx);
+    const marker = L.circleMarker([p.lat, p.lng], {
+        radius: 8,
+        color: '#ffffff',
+        weight: 2,
+        fillColor: colour,
+        fillOpacity: 1
+    }).addTo(map);
     if (p.address) marker.bindTooltip(shortLabel(p), { direction: 'top', offset: [0, -10] });
     markers.push(marker);
     points.push(p);
@@ -224,6 +272,8 @@ function removePoint(idx) {
     map.removeLayer(markers[idx]);
     markers.splice(idx, 1);
     points.splice(idx, 1);
+    // Recolour remaining markers so they stay in lockstep with the list swatches.
+    markers.forEach((m, i) => m.setStyle({ fillColor: colorForIndex(i) }));
     renderPoints();
     // any previous MEC/result is now stale
     clearComputed();
@@ -343,102 +393,92 @@ async function runMeetingPoint() {
     await findNearestAmenity(result.center, type);
 }
 
-const TYPE_TO_AMENITY = {
-    restaurant: 'restaurant', cafe: 'cafe', bar: 'bar', hotel: 'hotel',
-    supermarket: 'supermarket', pharmacy: 'pharmacy', bank: 'bank'
-};
-
-// Read coords for either nodes (lat/lon) or ways/relations (center.lat/lon).
-function elemLatLon(el) {
-    if (typeof el.lat === 'number') return { lat: el.lat, lon: el.lon };
-    if (el.center) return { lat: el.center.lat, lon: el.center.lon };
-    return null;
-}
-
-// Public Overpass mirrors, tried in order. Kumi Systems is the most lenient
-// for casual public usage; openstreetmap.fr is a France-hosted fallback;
-// overpass-api.de is the canonical (but heavily rate-limited) endpoint.
-const OVERPASS_ENDPOINTS = [
-    'https://overpass.kumi.systems/api/interpreter',
-    'https://overpass.private.coffee/api/interpreter',
-    'https://overpass.osm.ch/api/interpreter',
-    'https://overpass.openstreetmap.fr/api/interpreter',
-    'https://overpass-api.de/api/interpreter'
+// Cycle palette for point markers + sidebar swatches.
+const POINT_COLORS = [
+    '#ef476f', '#06d6a0', '#ffd166', '#7c5cff',
+    '#118ab2', '#f78c6b', '#9b5de5', '#06b6d4'
 ];
-
-async function overpassFetch(query) {
-    let lastErr = null;
-    const total = OVERPASS_ENDPOINTS.length;
-    for (let i = 0; i < total; i++) {
-        const url = OVERPASS_ENDPOINTS[i];
-        console.log(`[Overpass] → trying mirror ${i + 1}/${total}: ${url}`);
-        toast(`Recherche… (mirror ${i + 1}/${total})`, 12000);
-
-        const ctrl = new AbortController();
-        const timer = setTimeout(() => ctrl.abort(), 10000);   // 10s per mirror
-        try {
-            const res = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: 'data=' + encodeURIComponent(query),
-                signal: ctrl.signal
-            });
-            clearTimeout(timer);
-            if (res.status === 429 || res.status === 503 || res.status === 504) {
-                console.warn(`[Overpass] ${url} → HTTP ${res.status}`);
-                lastErr = new Error(`HTTP ${res.status}`);
-                continue;
-            }
-            if (!res.ok) {
-                throw new Error(`HTTP ${res.status}`);
-            }
-            console.log(`[Overpass] ${url} → ok`);
-            return await res.json();
-        } catch (err) {
-            clearTimeout(timer);
-            const msg = err.name === 'AbortError' ? 'timeout (10s)' : err.message;
-            console.warn(`[Overpass] ${url} → ${msg}`);
-            lastErr = err;
-        }
-    }
-    throw lastErr || new Error('All Overpass mirrors failed');
-}
+const colorForIndex = i => POINT_COLORS[i % POINT_COLORS.length];
 
 async function findNearestAmenity(center, type) {
-    const amenity = TYPE_TO_AMENITY[type];
-    if (!amenity) { toast('Type non supporté.'); return; }
+    const includedTypes = TYPE_TO_GOOGLE[type];
+    if (!includedTypes) { toast('Type non supporté.'); return; }
+    if (!HAS_API_KEY) {
+        toast('Clé Google Places non injectée (déployez via GitHub Actions).', 6000);
+        return;
+    }
 
-    const radius = 5000;
-    const query = `[out:json][timeout:25];
-(
-  node(around:${radius},${center.lat},${center.lng})[amenity=${amenity}];
-  way(around:${radius},${center.lat},${center.lng})[amenity=${amenity}];
-  relation(around:${radius},${center.lat},${center.lng})[amenity=${amenity}];
-);
-out center;`;
+    const radius = parseInt($('radiusSlider').value, 10) || 5000;
+    const minStars = parseInt($('starsSlider').value, 10) || 0;
 
-    toast(`Recherche du ${type} le plus proche…`, 20000);
-    console.log('[Overpass] query:', query);
+    const body = {
+        includedTypes,
+        maxResultCount: 20,
+        locationRestriction: {
+            circle: {
+                center: { latitude: center.lat, longitude: center.lng },
+                radius: radius
+            }
+        }
+    };
+
+    toast(`Recherche du ${type} le plus proche…`, 15000);
+    console.log('[GooglePlaces] body:', body);
+
+    const fields = [
+        'places.displayName',
+        'places.location',
+        'places.rating',
+        'places.userRatingCount',
+        'places.formattedAddress',
+        'places.googleMapsUri',
+        'places.priceLevel'
+    ].join(',');
 
     try {
-        const data = await overpassFetch(query);
-        console.log('[Overpass] elements:', data.elements?.length, data);
-        const elements = (data.elements || []).filter(elemLatLon);
-        if (elements.length === 0) {
+        const res = await fetch('https://places.googleapis.com/v1/places:searchNearby', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Goog-Api-Key': GOOGLE_PLACES_API_KEY,
+                'X-Goog-FieldMask': fields
+            },
+            body: JSON.stringify(body)
+        });
+        if (!res.ok) {
+            const errText = await res.text();
+            console.error('[GooglePlaces] HTTP', res.status, errText);
+            toast(`Google Places: HTTP ${res.status} (voir console).`);
+            return;
+        }
+        const data = await res.json();
+        console.log('[GooglePlaces] results:', data.places?.length, data);
+
+        let places = data.places || [];
+        if (places.length === 0) {
             toast('Aucun commerce trouvé dans les environs.');
             return;
         }
-        let nearest = elements[0];
-        let nearestLL = elemLatLon(nearest);
-        let minDist = haversine(center.lat, center.lng, nearestLL.lat, nearestLL.lon);
-        for (const place of elements) {
-            const ll = elemLatLon(place);
+        if (minStars > 0) {
+            const before = places.length;
+            places = places.filter(p => typeof p.rating === 'number' && p.rating >= minStars);
+            console.log(`[stars] ${before} → ${places.length} after >=${minStars}*`);
+            if (places.length === 0) {
+                toast(`Aucun commerce avec ${minStars}+ étoiles dans les environs.`);
+                return;
+            }
+        }
+
+        let nearest = null;
+        let nearestLL = null;
+        let minDist = Infinity;
+        for (const p of places) {
+            const ll = { lat: p.location.latitude, lon: p.location.longitude };
             const d = haversine(center.lat, center.lng, ll.lat, ll.lon);
-            if (d < minDist) { nearest = place; nearestLL = ll; minDist = d; }
+            if (d < minDist) { nearest = p; nearestLL = ll; minDist = d; }
         }
 
         if (businessMarker) map.removeLayer(businessMarker);
-        // Bright contrasting marker so it's visible on the light basemap.
         businessMarker = L.circleMarker([nearestLL.lat, nearestLL.lon], {
             radius: 9,
             color: '#f4a02a',
@@ -446,34 +486,36 @@ out center;`;
             fillColor: '#ffd683',
             fillOpacity: 1
         }).addTo(map)
-          .bindTooltip(nearest.tags?.name || `(${type})`, { direction: 'top', permanent: true, offset: [0, -10] })
+          .bindTooltip(nearest.displayName?.text || `(${type})`, { direction: 'top', permanent: true, offset: [0, -10] })
           .openTooltip();
 
-        // Pan/zoom to include the centre AND the amenity, so the result is never offscreen.
         const bounds = L.latLngBounds([
             [center.lat, center.lng],
             [nearestLL.lat, nearestLL.lon]
         ]);
         map.fitBounds(bounds, { padding: [120, 120], maxZoom: 16 });
 
-        const name = nearest.tags?.name || `(${type} sans nom)`;
+        const name = nearest.displayName?.text || `(${type} sans nom)`;
         const distLabel = minDist >= 1000
             ? `${(minDist / 1000).toFixed(2)} km`
             : `${Math.round(minDist)} m`;
-        const gmaps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}%20${nearestLL.lat},${nearestLL.lon}`;
+        const metaBits = [];
+        if (typeof nearest.rating === 'number') {
+            metaBits.push(`★ ${nearest.rating.toFixed(1)} (${nearest.userRatingCount ?? 0})`);
+        }
+        metaBits.push(`${distLabel} du centre`);
 
         showResult({
             kicker: type,
             title: name,
-            meta: `${distLabel} du centre`,
-            link: gmaps,
+            meta: metaBits.join(' · '),
+            link: nearest.googleMapsUri || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}%20${nearestLL.lat},${nearestLL.lon}`,
             linkLabel: 'Ouvrir dans Google Maps'
         });
-        // dismiss the "recherche en cours" toast
         $('toast').hidden = true;
     } catch (err) {
-        console.error('[Overpass] error', err);
-        toast('Erreur Overpass / OSM (voir console).');
+        console.error('[GooglePlaces] error', err);
+        toast('Erreur Google Places (voir console).');
     }
 }
 
@@ -503,6 +545,27 @@ function haversine(lat1, lon1, lat2, lon2) {
               Math.sin(dLon / 2) ** 2;
     return 2 * R * Math.asin(Math.sqrt(a)) * 1000; // metres
 }
+
+// ---------- Filter slider labels ----------
+
+function formatRadius(m) {
+    return m >= 1000 ? `${(m / 1000).toFixed(m % 1000 ? 1 : 0)} km` : `${m} m`;
+}
+const radiusSlider = $('radiusSlider');
+const radiusLabel  = $('radiusLabel');
+radiusSlider.addEventListener('input', () => {
+    radiusLabel.textContent = formatRadius(parseInt(radiusSlider.value, 10));
+});
+radiusLabel.textContent = formatRadius(parseInt(radiusSlider.value, 10));
+
+const starsSlider = $('starsSlider');
+const starsLabel  = $('starsLabel');
+function updateStarsLabel() {
+    const n = parseInt(starsSlider.value, 10);
+    starsLabel.textContent = n === 0 ? 'aucune' : '★'.repeat(n) + ` (${n}+)`;
+}
+starsSlider.addEventListener('input', updateStarsLabel);
+updateStarsLabel();
 
 // initial render
 renderPoints();

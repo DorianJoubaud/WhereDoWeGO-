@@ -58,6 +58,23 @@
         </select>
     </label>
 
+    <details class="filters">
+        <summary>Filtres</summary>
+
+        <label class="field field--inline">
+            <span class="field__label">Rayon de recherche : <strong id="radiusLabel">5 km</strong></span>
+            <input type="range" id="radiusSlider" class="slider"
+                   min="500" max="20000" step="500" value="5000">
+        </label>
+
+        <label class="field field--inline">
+            <span class="field__label">Étoiles minimum : <strong id="starsLabel">aucune</strong></span>
+            <input type="range" id="starsSlider" class="slider"
+                   min="0" max="5" step="1" value="0">
+            <span class="field__hint">Note Google Maps. Les commerces sans note sont exclus dès que le seuil est ≥ 1.</span>
+        </label>
+    </details>
+
     <section class="points">
         <div class="points__head">
             <span class="points__label">Points</span>

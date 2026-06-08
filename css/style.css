@@ -250,6 +250,92 @@ html, body {
 .field__select:focus { outline: none; border-color: var(--accent); }
 .field__select option { background: #1a1d21; color: var(--text); }
 
+/* ---------- Filters (collapsible) ---------- */
+
+.filters {
+    border: 1px solid var(--panel-edge-2);
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.025);
+    padding: 0 10px;
+}
+.filters > summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 8px 2px;
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-faint);
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.filters > summary::-webkit-details-marker { display: none; }
+.filters > summary::before {
+    content: '▸';
+    color: var(--text-faint);
+    transition: transform .15s;
+    display: inline-block;
+    width: 10px;
+}
+.filters[open] > summary::before { transform: rotate(90deg); }
+
+.field--inline {
+    padding: 6px 0 10px;
+    gap: 4px;
+}
+.field--inline .field__label strong {
+    color: var(--accent);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+.field__hint {
+    font-size: 0.74rem;
+    color: var(--text-faint);
+    line-height: 1.4;
+    margin-top: 2px;
+}
+.field__hint code {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 0.85em;
+}
+
+.slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+    outline: none;
+    margin: 6px 0 2px;
+}
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: grab;
+    border: 2px solid #0e1013;
+    box-shadow: 0 0 0 1px var(--accent);
+    transition: transform .1s;
+}
+.slider::-webkit-slider-thumb:active { transform: scale(1.15); cursor: grabbing; }
+.slider::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: grab;
+    border: 2px solid #0e1013;
+    box-shadow: 0 0 0 1px var(--accent);
+}
+
 /* ---------- Points list ---------- */
 
 .points { display: flex; flex-direction: column; gap: 6px; }
@@ -293,6 +379,14 @@ html, body {
     border-radius: var(--radius-sm);
     font-size: 0.88rem;
     line-height: 1.3;
+}
+.points__list .point__swatch {
+    flex-shrink: 0;
+    width: 10px;
+    height: 18px;
+    border-radius: 3px;
+    border: 1px solid rgba(0, 0, 0, 0.35);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18) inset;
 }
 .points__list .point__label {
     flex: 1;
