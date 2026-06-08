@@ -13,31 +13,34 @@ let centerMarker = null;
 let businessMarker = null;
 let addingFromMap = false;
 
-// Google Places Autocomplete
-function initAutocomplete() {
-  const input = document.getElementById('addressInput');
-  const autocomplete = new google.maps.places.Autocomplete(input, {
-    types: ['geocode'],
-    componentRestrictions: { country: 'FR' }
-  });
+L.Control.geocoder({
+  collapsed: false,            // champ toujours visible
+  placeholder: 'Entrez une adresse…',
+  defaultMarkGeocode: false,   // on gère nous-même le marqueur
+  geocoder: L.Control.Geocoder.nominatim({
+    countrycodes: 'fr'         // limite à la France
+  })
+})
+  .on('markgeocode', function(e) {
+    const center = e.geocode.center;
 
-  autocomplete.addListener('place_changed', function () {
-    const place = autocomplete.getPlace();
-    if (!place.geometry) {
-      alert("Adresse non reconnue.");
-      return;
-    }
-    const lat = place.geometry.location.lat();
-    const lng = place.geometry.location.lng();
-    const address = place.formatted_address;
-
-    const marker = L.marker([lat, lng]).addTo(map);
+    // a) ajoute le marqueur sur la carte
+    const marker = L.marker(center).addTo(map);
     markers.push(marker);
-    points.push({ lat, lng, address });
+
+    // b) mémorise le point (lat, lng, adresse)
+    points.push({
+      lat: center.lat,
+      lng: center.lng,
+      address: e.geocode.name
+    });
+
+    // c) met à jour la liste et recentre la carte
     updatePointsList();
-    input.value = '';
-  });
-}
+    map.setView(center, 15);
+  })
+  .addTo(map);
+
 
 function updatePointsList() {
   const list = document.getElementById('pointsList');
@@ -209,4 +212,3 @@ function haversine(lat1, lon1, lat2, lon2) {
   return 2 * R * Math.asin(Math.sqrt(a)) * 1000; // return in meters
 }
 
-initAutocomplete();

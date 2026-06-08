@@ -130,31 +130,6 @@ function convexHull2D(points2D) {
   return [...new Set([...lower, ...upper])].map(p => p.original);
 }
 
-function toggleConvexHullMarkers(map, pointsLatLon) {
-  if (convexHullVisible) {
-    convexHullMarkers.forEach(m => map.removeLayer(m));
-    convexHullMarkers = [];
-    convexHullVisible = false;
-    return;
-  }
-
-  const points3D = pointsLatLon.map(p => latLonToXYZ(p.lat, p.lng));
-  const projected = projectTo2D([0, 0, 1], points3D);
-  const convexPoints = convexHull2D(projected);
-
-  convexHullMarkers = convexPoints.map(p3d => {
-    const { lat, lng } = xyzToLatLon(...p3d);
-    return L.circleMarker([lat, lng], {
-      color: 'blue',
-      radius: 6,
-      fillColor: 'blue',
-      fillOpacity: 0.8
-    }).addTo(map);
-  });
-
-  convexHullVisible = true;
-}
-
 function computeMinimumEnclosingCircle3D(pointsLatLon) {
   if (pointsLatLon.length === 0) return null;
 

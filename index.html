@@ -5,16 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Carte & Recherche de Commerces</title>
     <link rel="stylesheet" href="css/style.css">
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBynAjukhaccuzT_YvQlvctd78terjliIg&libraries=places"></script>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"
+/>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
 </head>
 <body>
     <div id="container">
         <div id="sidebar">
             <h2>Points</h2>
             <div id="pointsList"></div>
-            <input type="text" id="addressInput" placeholder="Entrez une adresse">
             <select id="businessType">
                 <option value="">Type de commerce (optionnel)</option>
                 <option value="restaurant">Restaurant</option>
@@ -25,7 +29,6 @@
                 <option value="pharmacy">Pharmacie</option>
                 <option value="bank">Banque</option>
             </select>
-            <button id="addPointButton">Ajouter un point</button>
             <button id="addFromMapButton">Ajouter sur la carte</button>
             <button id="searchBusinessButton">Chercher</button>
             <button id="clearButton">Effacer</button>
