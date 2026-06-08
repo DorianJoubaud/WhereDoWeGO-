@@ -63,7 +63,55 @@ html, body {
 }
 .leaflet-bar { box-shadow: var(--shadow) !important; border: 1px solid var(--panel-edge) !important; }
 
-/* ---------- Generic panel shell ---------- */
+/* ---------- Burger toggle for controls panel ---------- */
+
+.panel-toggle {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 1100;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    background: var(--panel);
+    color: var(--text);
+    border: 1px solid var(--panel-edge);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(18px) saturate(150%);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: background .15s, transform .1s;
+}
+.panel-toggle:hover { background: rgba(255, 255, 255, 0.08); }
+.panel-toggle:active { transform: scale(0.96); }
+
+.panel-toggle__bar {
+    width: 18px;
+    height: 2px;
+    background: var(--text);
+    border-radius: 1px;
+    transform-origin: center;
+    transition: transform .2s ease, opacity .15s;
+}
+
+/* aria-expanded="true" (panel visible) → bars morph into an X */
+.panel-toggle[aria-expanded="true"] .panel-toggle__bar:nth-child(1) {
+    transform: translateY(6px) rotate(45deg);
+}
+.panel-toggle[aria-expanded="true"] .panel-toggle__bar:nth-child(2) {
+    opacity: 0;
+}
+.panel-toggle[aria-expanded="true"] .panel-toggle__bar:nth-child(3) {
+    transform: translateY(-6px) rotate(-45deg);
+}
+
+/* Generic panel shell ---------- */
 
 .panel {
     position: absolute;
@@ -87,6 +135,20 @@ html, body {
     flex-direction: column;
     gap: 14px;
     overflow-y: auto;
+    transition: transform .25s ease-out, opacity .2s;
+}
+
+/* Make room for the burger button at top-left of the panel header */
+.panel--controls .panel__head {
+    padding-left: 52px;
+    min-height: 38px;
+}
+
+/* Hidden state — slides off-screen, mouse/touch events stop hitting it */
+.panel--controls.panel--hidden {
+    transform: translateX(-115%);
+    opacity: 0;
+    pointer-events: none;
 }
 
 .panel__head { display: flex; flex-direction: column; gap: 4px; }
@@ -570,6 +632,11 @@ html, body {
         /* honour notched-device safe areas at the bottom */
         padding: 22px 16px calc(18px + env(safe-area-inset-bottom));
     }
+    /* on mobile, the burger floats at top-left of the viewport, NOT inside the
+       bottom sheet, so the panel header doesn't need extra left padding. */
+    .panel--controls .panel__head { padding-left: 0; min-height: 0; }
+    /* slide DOWN instead of LEFT when hidden */
+    .panel--controls.panel--hidden { transform: translateY(115%); }
     /* drag-handle hint at the top of the bottom sheet */
     .panel--controls::before {
         content: '';

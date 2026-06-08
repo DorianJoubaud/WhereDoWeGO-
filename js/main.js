@@ -1,5 +1,5 @@
 // === main.js — WhereDoWeGo, dark-glass redesign ===
-console.log('%c[WhereDoWeGo] main.js build v6 (Google Places)', 'color:#11ABB0');
+console.log('%c[WhereDoWeGo] main.js build v7 (burger + responsive)', 'color:#11ABB0');
 
 // ============================================================
 // CONFIG — Google Places API (New) key is injected at deploy time.
@@ -544,6 +544,24 @@ function haversine(lat1, lon1, lat2, lon2) {
               Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
               Math.sin(dLon / 2) ** 2;
     return 2 * R * Math.asin(Math.sqrt(a)) * 1000; // metres
+}
+
+// ---------- Panel toggle ----------
+
+const controlsPanel = $('controls');
+const panelToggleBtn = $('panelToggle');
+
+function setPanelOpen(open) {
+    controlsPanel.classList.toggle('panel--hidden', !open);
+    panelToggleBtn.setAttribute('aria-expanded', String(open));
+}
+panelToggleBtn.addEventListener('click', () => {
+    const willOpen = controlsPanel.classList.contains('panel--hidden');
+    setPanelOpen(willOpen);
+});
+// On phones, default the panel to closed so the user sees the map first.
+if (window.matchMedia('(max-width: 600px)').matches) {
+    setPanelOpen(false);
 }
 
 // ---------- Filter slider labels ----------
